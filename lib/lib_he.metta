@@ -15,6 +15,12 @@
 (= (assertAlphaEqual $A $B)
    (assert (=alpha $A $B)))
 
+(= (assertEqualToResult $A $B)
+   (assert (== (eval $A) (eval $B))))
+
+(= (assertAlphaEqualToResult $A $B)
+   (assert (=alpha (eval $A) (eval $B))))
+
 (: unify (-> Expression Expression Expression Expression %Undefined%))
 
 (= (unify $space $pattern $then $else)
