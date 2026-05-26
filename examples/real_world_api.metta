@@ -1,34 +1,37 @@
-;;; REAL-WORLD LIVE DATA PROCESSING ;;;
-;;; This script fetches live data from an external API, parses it natively,
-;;; and performs logic on the extracted fields to prove real-world utility.
+;;; JSON DATA PROCESSING ;;;
+;;; Deterministic tests for the Prolog-backed JSON library.
 
 !(import! &self (library lib_json))
 
-;; 1. Fetching live data from a public Todo API:
-;; Returns: {"userId": 1, "id": 1, "title": "delectus aut autem", "completed": false}
-(= (fetch-todo)
-   (let $json-str (py-str (import-python-code "import subprocess; print(subprocess.check_output(['curl', '-s', 'https://jsonplaceholder.typicode.com/todos/1']).decode('utf-8').strip())"))
-        $json-str))
+;; A realistic API response, kept local so tests do not depend on the network.
+(= (todo-json)
+   "{\"userId\":1,\"id\":1,\"title\":\"delectus aut autem\",\"completed\":false,\"tags\":[\"urgent\",\"home\"]}")
 
-;; 2. Processing Logic:
-;; We parse the JSON and use the internal data to perform a conditional action.
-(= (analyze-task $json-str)
-   (let $dict (json-parse $json-str)
-        (case $dict
-              (((json-object (completed $status) (id $id) (title $title) (userId $uid))
-                (if (== $status False)
-                    (format-message "Alert: Task " $id " ('" $title "') is NOT yet completed.")
-                    (format-message "Status: Task " $id " is finished.")))))))
+(= (todo-object)
+   (json-parse (todo-json)))
 
-;; Simple string formatter helper
-(= (format-message $a $b $c $d $e)
-   (let* (($s (py-str (import-python-code (format "print(''.join(map(str, [~s, ~s, '~s', ~s, ~s])))" $a $b $c $d $e)))))
-         $s))
+(= (todo-title)
+   (json-get (todo-object) title))
 
-;; 3. Final Execution:
-;; We fetch the REAL data and let our logic process the actual 'id' and 'title' from the web.
-!(let $raw (fetch-todo)
-      (let $analysis (analyze-task $raw)
-           (test $analysis "Alert: Task 1 ('delectus aut autem') is NOT yet completed.")))
+(= (todo-completed?)
+   (json-get (todo-object) completed))
 
-!(writeln! "Verification Complete: Successfully parsed live JSON and performed logic on internal fields!")
+(= (todo-first-tag)
+   (json-array-get (json-get (todo-object) tags) 0))
+
+!(test (json-type (todo-object)) object)
+!(test (json-object-keys (todo-object)) (completed id tags title userId))
+
+!(test (todo-title) "delectus aut autem")
+!(test (todo-completed?) false)
+!(test (todo-first-tag) "urgent")
+
+!(test (json-has-key? (todo-object) title) true)
+!(test (json-has-key? (todo-object) missing) false)
+!(test (json-get (todo-object) missing) ())
+
+!(test (json-array-length (json-get (todo-object) tags)) 2)
+!(test (json-array-get (json-get (todo-object) tags) 1) "home")
+!(test (json-array-get (json-get (todo-object) tags) 4) ())
+
+!(test (json-parse (json-stringify (todo-object))) (todo-object))
