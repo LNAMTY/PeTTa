@@ -2,8 +2,6 @@
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
-PATH="$ROOT/../../local/swipl-9.3.36/bin:$PATH"
-export PATH
 TMPDIR=${TMPDIR:-/tmp}
 
 run_ok() {

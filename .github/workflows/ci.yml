@@ -144,6 +144,9 @@ jobs:
       - name: Run shell tests
         run: sh test.sh
 
+      - name: Run regression tests
+        run: sh tests/regression/test_specializer_regressions.sh
+
   # 5) On push to main, rebuild & publish :latest only when Dockerfile changed
   publish-latest:
     if: github.event_name == 'push'
