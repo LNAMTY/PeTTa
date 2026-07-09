@@ -82,7 +82,9 @@ exp(Arg,R) :- R is exp(Arg).
 'atan-math'(A, Out) :- Out is atan(A).
 'isnan-math'(A, Out) :- ( A =:= A -> Out = false ; Out = true ).
 'isinf-math'(A, Out) :- ( A =:= 1.0Inf ; A =:= -1.0Inf -> Out = true ; Out = false ).
+'min-atom'(List, Out) :- non_list(List), !, Out = [].
 'min-atom'(List, Out) :- min_list(List, Out).
+'max-atom'(List, Out) :- non_list(List), !, Out = [].
 'max-atom'(List, Out) :- max_list(List, Out).
 
 %%% Random Generators: %%%
@@ -111,6 +113,7 @@ empty(_) :- fail.
 'first-from-pair'([A, _], A).
 first([A, _], A).
 'second-from-pair'([_, A], A).
+'unique-atom'(A, B) :- non_list(A), !, B = [].
 'unique-atom'(A, B) :- list_to_set(A, B).
 
 %%% Alpha-equivalence unique atom %%%
@@ -135,7 +138,13 @@ alpha_list_to_set_assoc([H|T], SeenIn, R) :-
         alpha_list_to_set_assoc(T, SeenOut, RT)
     ).
 
+%A term that can never become a list, no matter how it gets instantiated:
+non_list(X) :- atomic(X), X \== [].
+non_list(X) :- compound(X), X \= [_|_].
+
+'sort-atom'(List, Sorted) :- non_list(List), !, Sorted = [].
 'sort-atom'(List, Sorted) :- msort(List, Sorted).
+'size-atom'(List, Size) :- non_list(List), !, Size = [].
 'size-atom'(List, Size) :- length(List, Size).
 'car-atom'([H|_], H) :- !.
 'car-atom'(_, []).
@@ -162,6 +171,7 @@ member_alpha(X, [_|T]) :- member_alpha(X, T).
                                                             ; Out = [H|Rest],
                                                               'subtraction-atom'(T, B, Rest) ).
 'union-atom'(A, B, Out) :- append(A, B, Out).
+'intersection-atom'(A, B, Out) :- ( non_list(A) ; non_list(B) ), !, Out = [].
 'intersection-atom'(A, B, Out) :- intersection(A, B, Out).
 
 %%% Type system: %%%
